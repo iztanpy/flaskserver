@@ -31,6 +31,10 @@ class User(db.Model):
 
 db.create_all()
 
+@app.route('/')
+def base():
+    print("server is up!")
+
 @app.route('/processing', methods=["POST"])
 def process():
     username = request.json.get("username")
