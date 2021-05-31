@@ -10,9 +10,14 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 DATABASE_URL = os.environ['DATABASE_URL']
 SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL?sslmode=require')
 conn = psycopg2.connect(DATABASE_URL, sslmode='require')
-app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
+
+
+uri = os.getenv("DATABASE_URL")  # or other relevant config var
+if uri.startswith("postgres://"):
+    uri = uri.replace("postgres://", "postgresql://", 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = uri
 db = SQLAlchemy(app)
-# connect database to flask app
 
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhost/facialdetection'
 
