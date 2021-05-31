@@ -4,32 +4,32 @@ from flask_cors import CORS, cross_origin
 from os import environ
 
 app = Flask(__name__)
-# CORS(app)
-# SQLALCHEMY_TRACK_MODIFICATIONS = False
-#
-#
-# # connect database to flask app
-#
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhost/facialdetection'
-# db = SQLAlchemy(app)
-#
-#
-# # create a user class
-#
-# class User(db.Model):
-#     __tablename__ = "users"
-#     id = db.Column(db.Integer, primary_key=True)
-#     username = db.Column(db.String(64), unique=True, nullable=False)
-#     password = db.Column(db.String(64), nullable=False)
-#
-#     def check_password(self, password):
-#         return self.password == password
-#
-#     def __repr__(self):
-#         return '<User %r>' % self.username
-#
-#
-# db.create_all()
+CORS(app)
+SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+
+# connect database to flask app
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhost/facialdetection'
+db = SQLAlchemy(app)
+
+
+# create a user class
+
+class User(db.Model):
+    __tablename__ = "users"
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), unique=True, nullable=False)
+    password = db.Column(db.String(64), nullable=False)
+
+    def check_password(self, password):
+        return self.password == password
+
+    def __repr__(self):
+        return '<User %r>' % self.username
+
+
+db.create_all()
 
 @app.route('/')
 def base():
