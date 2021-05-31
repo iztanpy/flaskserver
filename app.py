@@ -10,7 +10,7 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # connect database to flask app
 
-app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('mysql+pymysql://root:Shinyvan123@localhost/facialdetection')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://postgres:postgres@localhost/facialdetection'
 db = SQLAlchemy(app)
 
 
