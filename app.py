@@ -33,7 +33,7 @@ db.create_all()
 
 @app.route('/')
 def base():
-    print("server is up!")
+    return "server is up!"
 
 @app.route('/processing', methods=["POST"])
 def process():
