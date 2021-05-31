@@ -6,13 +6,12 @@ import psycopg2
 
 app = Flask(__name__)
 CORS(app)
-SQLALCHEMY_TRACK_MODIFICATIONS = False
+
 
 DATABASE_URL = os.environ['DATABASE_URL']
-conn = psycopg2.connect(DATABASE_URL, sslmode='require')
-
 # connect database to flask app
 app.config.from_object(DATABASE_URL)
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhost/facialdetection'
 db = SQLAlchemy(app)
 
