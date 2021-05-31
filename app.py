@@ -1,16 +1,19 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, request, render_template, make_response, redirect, url_for, session
 from flask_cors import CORS, cross_origin
-from os import environ
+import os
+import psycopg2
 
 app = Flask(__name__)
 CORS(app)
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+DATABASE_URL = os.environ['DATABASE_URL']
+conn = psycopg2.connect(DATABASE_URL, sslmode='require')
 
 # connect database to flask app
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhost/facialdetection'
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhost/facialdetection'
 db = SQLAlchemy(app)
 
 
@@ -70,33 +73,9 @@ def login():
             print("incorrect password")
             return "incorrect password"
     return "user not found"
-
-
-
-
-    # existing_user = User.query.filter(
-    #      User.username == username
-    # ).first()
-    # # if username is taken
-    # if existing_user:
-    #     return 'username already taken!'
-    #     # else create a new user
-    # new_user = User(
-    #     username=username,
-    #     password=password
-    # )
-    # # add to the database
-    # db.session.add(new_user)
-    # db.session.commit()
-    # redirect user to the home page, and see that their record has been added?
-
-#
 # @app.route('/calibrate eye size', methods=methods = ["POST", "GET"])
 #
 # def calibration():
-
-
-
 
 
 if __name__ == "__main__":
