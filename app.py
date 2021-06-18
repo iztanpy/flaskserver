@@ -205,6 +205,8 @@ def calibration():
     img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
+    cv2.imwrite("random.jpg", img)
+
     faces = hog_face_detector(gray)
 
     if not faces:
