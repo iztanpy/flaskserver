@@ -28,6 +28,8 @@ if uri.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = uri
 db = SQLAlchemy(app)
 
+
+
 #set up the functions used for facial detection
 hog_face_detector = dlib.get_frontal_face_detector()
 
@@ -123,9 +125,17 @@ def login():
             print("incorrect password")
             return "incorrect password"
     return "user not found"
-# @app.route('/calibrate eye size', methods=methods = ["POST", "GET"])
-#
-# def calibration():
+
+
+@app.route('/get_value', methods=['GET', 'POST'])
+def get_value():
+    name = request.json.get('name')
+    cur = db.connection.cursor()
+    cur.execute(f"SELECT ear FROM users WHERE username = '{name}'")
+    result = cur.fetchall()[0][0]
+    print(result)
+    return str(result)
+
 
 @app.route('/video_player', methods=['POST'])
 def player():
@@ -133,7 +143,7 @@ def player():
     string = request.json.get('picture')
     img = readb64(string['base64'])
     img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
-    middle_time = time.time()
+
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     faces = hog_face_detector(gray)
@@ -173,9 +183,75 @@ def player():
     print(len(ear_collection))
     print(value)
 
-    if value > threshold:
-        return 'no'
-    return 'yes'
+    return str(value)
+
+
+@app.route('/clear', methods=['POST'])
+def clear():
+    global calibration_collection, ear_collection
+    print('clearing')
+    calibration_collection.clear()
+    ear_collection.clear()
+    return 'cleared'
+
+
+@app.route('/calibration', methods=['POST'])
+def calibration():
+    string = request.json.get('picture')
+    is_final = request.json.get('final')
+    name = request.json.get('name')
+    img = readb64(string['base64'])
+
+    img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    faces = hog_face_detector(gray)
+
+    if not faces:
+        return 'done'
+
+    for face in faces:
+        face_landmarks = dlib_facelandmark(gray, face)
+        left_eye = []
+        right_eye = []
+
+        for point in range(36, 42):
+            x = face_landmarks.part(point).x
+            y = face_landmarks.part(point).y
+
+            left_eye.append((x, y))
+
+        for point in range(42, 48):
+            x = face_landmarks.part(point).x
+            y = face_landmarks.part(point).y
+
+            right_eye.append((x, y))
+
+        left_ear = calculate_ear(left_eye)
+        right_ear = calculate_ear(right_eye)
+
+        mean_ear = (left_ear + right_ear) / 2
+
+        calibration_collection.append(mean_ear)
+
+    print(name)
+
+    if is_final == 'true':
+        print('final one')
+        value = mean(calibration_collection)
+        print(value)
+
+        connection = db.connection
+        cursor = connection.cursor()
+        cursor.execute(
+            f"UPDATE users SET ear={value} WHERE username = '{name}'")
+
+        db.connection.commit()
+
+        print('updated!')
+        return str(mean(calibration_collection))
+
+    return 'next_loop'
 
 
 if __name__ == "__main__":
