@@ -244,7 +244,7 @@ def calibration():
         value = mean(calibration_collection)
         print(value)
 
-        connection = db.connection
+        connection = db.connect()
         cursor = connection.cursor()
         cursor.execute(
             f"UPDATE users SET ear={value} WHERE username = '{name}'")
