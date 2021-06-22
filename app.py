@@ -197,6 +197,7 @@ def clear():
 
 @app.route('/calibration', methods=['POST'])
 def calibration():
+    calibration_collection = [];
     string = request.json.get('picture')
     is_final = request.json.get('final')
     name = request.json.get('name')
