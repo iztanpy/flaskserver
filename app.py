@@ -130,9 +130,7 @@ def login():
 @app.route('/get_value', methods=['GET', 'POST'])
 def get_value():
     name = request.json.get('name')
-    cur = db.connection.cursor()
-    cur.execute(f"SELECT ear FROM users WHERE username = '{name}'")
-    result = cur.fetchall()[0][0]
+    result = db.execute(f"SELECT ear FROM users WHERE username = '{name}'")
     print(result)
     return str(result)
 
@@ -244,12 +242,9 @@ def calibration():
         value = mean(calibration_collection)
         print(value)
 
-        connection = db.connect()
-        cursor = connection.cursor()
-        cursor.execute(
-            f"UPDATE users SET ear={value} WHERE username = '{name}'")
+        db.execute(f"UPDATE users SET ear={value} WHERE username = '{name}'")
 
-        db.connection.commit()
+        db.commit()
 
         print('updated!')
         return str(mean(calibration_collection))
