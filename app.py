@@ -256,7 +256,7 @@ def calibration():
         value = mean(calibration_collection)
         print(value)
 
-        user = User.filter(User.username == name).first()
+        user = User.query.filter(User.username == name).first()
         user.ear = value
 
         db.session.commit()
