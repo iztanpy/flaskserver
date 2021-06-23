@@ -17,7 +17,7 @@ import time
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-#set up connection to the databse
+# set up connection to the databse
 DATABASE_URL = os.environ['DATABASE_URL']
 SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL?sslmode=require')
 conn = psycopg2.connect(DATABASE_URL, sslmode='require')
@@ -28,9 +28,10 @@ if uri.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = uri
 db = SQLAlchemy(app)
 
+calibration_collection = []
 
 
-#set up the functions used for facial detection
+# set up the functions used for facial detection
 hog_face_detector = dlib.get_frontal_face_detector()
 
 dlib_facelandmark = dlib.shape_predictor(
@@ -38,13 +39,19 @@ dlib_facelandmark = dlib.shape_predictor(
 
 
 ear_collection = []
+
 threshold = 0.32
+
+# Function to decode base64 data to an image in numpy array form
+
 
 def readb64(base64_string):
     sbuf = io.BytesIO()
     sbuf.write(base64.b64decode(base64_string))
     pimg = Image.open(sbuf)
     return cv2.cvtColor(np.array(pimg), cv2.COLOR_RGB2BGR)
+
+# Function to calculate the eye aspect ratio given a list containing points of the eye
 
 
 def calculate_ear(eye):
@@ -53,6 +60,8 @@ def calculate_ear(eye):
     c = distance.euclidean(eye[0], eye[3])
     ear = (a + b) / (2 * c)
     return ear
+
+# function to calculate the mean value of a list (assumed to contain numeric data)
 
 
 def mean(lst):
@@ -64,19 +73,19 @@ def mean(lst):
     return final / len(lst)
 
 
-
-
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhost/facialdetection'
 
 # consumer.py for rabbitmq
 
 # create a user class
 
+# A user class for the database
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False)
     password = db.Column(db.String(64), nullable=False)
+    ear = db.Column(db.Float, default=0.32, nullable=False)
 
     def check_password(self, password):
         return self.password == password
@@ -85,10 +94,12 @@ class User(db.Model):
         return '<User %r>' % self.username
 
 
-
 @app.route('/')
 def base():
     return "server is up!"
+
+# Function to facilitate logging in for an existing user
+
 
 @app.route('/processing', methods=["POST"])
 def process():
@@ -97,27 +108,31 @@ def process():
     try:
         new_user = User(
             username=username,
-            password=password
+            password=password,
+            ear=0.32
         )
         db.session.add(new_user)
         db.session.commit()
-        print("s")
+
         return "success"
 
     except:
-        print("f")
+
         return "failure"
+
+# Function to facilitate log in
+
 
 @app.route('/login', methods=["POST"])
 def login():
     username = request.json.get("username")
     password = request.json.get("password")
     existing_user = User.query.filter(
-                User.username == username
-                ).first()
+        User.username == username
+    ).first()
     if existing_user:
         print(existing_user.username)
-        #check if the password is accurate
+        # check if the password is accurate
         if existing_user.password == password:
 
             return "login"
@@ -127,16 +142,17 @@ def login():
     return "user not found"
 
 
+# Function to facilitate getting the ear value for a user
 @app.route('/get_value', methods=['GET', 'POST'])
 def get_value():
     name = request.json.get('name')
-    cur = db.connection.cursor()
-    cur.execute(f"SELECT ear FROM users WHERE username = '{name}'")
-    result = cur.fetchall()[0][0]
-    print(result)
+    existing_user = User.query.filter(User.username == name).first()
+    result = existing_user.ear
+
     return str(result)
 
 
+# Function to simulate to app running and calculating the EAR
 @app.route('/video_player', methods=['POST'])
 def player():
     global ear_collection
@@ -179,13 +195,10 @@ def player():
     ear_collection = ear_collection[-10:]
     value = mean(ear_collection)
 
-    print(avg_ear)
-    print(len(ear_collection))
-    print(value)
-
     return str(value)
 
 
+# Function to clear the two lists so that past ear values do not affect current session
 @app.route('/clear', methods=['POST'])
 def clear():
     global calibration_collection, ear_collection
@@ -195,9 +208,10 @@ def clear():
     return 'cleared'
 
 
+# Function to help the user calibrate ear to their liking
 @app.route('/calibration', methods=['POST'])
 def calibration():
-    calibration_collection = [];
+    calibration_collection = []
     string = request.json.get('picture')
     is_final = request.json.get('final')
     name = request.json.get('name')
@@ -205,8 +219,6 @@ def calibration():
 
     img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    cv2.imwrite("random.jpg", img)
 
     faces = hog_face_detector(gray)
 
@@ -244,12 +256,10 @@ def calibration():
         value = mean(calibration_collection)
         print(value)
 
-        connection = db.connect()
-        cursor = connection.cursor()
-        cursor.execute(
-            f"UPDATE users SET ear={value} WHERE username = '{name}'")
+        user = User.filter(User.username == name).first()
+        user.ear = value
 
-        db.connection.commit()
+        db.session.commit()
 
         print('updated!')
         return str(mean(calibration_collection))
@@ -260,4 +270,3 @@ def calibration():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
-
