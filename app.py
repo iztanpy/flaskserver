@@ -12,12 +12,28 @@ from PIL import Image
 import numpy as np
 import dlib
 from scipy.spatial import distance
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from string import Template
+
+
+
+
 import time
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # set up connection to the databse
+MY_ADDRESS = 'stayawakeorbital@outlook.com'
+MY_PASSWORD = "StayAwake123"
+s = smtplib.SMTP(host='stayawakeorbital@outlook.com', port=587)
+s.starttls()
+s.login(MY_ADDRESS, MY_PASSWORD)
+
+
+
 DATABASE_URL = os.environ['DATABASE_URL']
 SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL?sslmode=require')
 conn = psycopg2.connect(DATABASE_URL, sslmode='require')
@@ -276,15 +292,31 @@ def calibration():
 
 @app.route('/checkEmail', methods=['POST'])
 def checkEmail():
+
+    def read_template(filename):
+        with open(filename, 'r', encoding='utf-8') as template_file:
+            template_file_content = template_file.read()
+        return Template(template_file_content)
+
     email = request.json.get("email")
     existing_user = User.query.filter(
                 User.email == email
                 ).first()
-    if existing_user:
-        #email the username and password!
-        existing_user.username
-        existing_user.password
 
+    if existing_user:
+        message_template = read_template('message.txt')
+        msg = MIMEMultipart()
+        message = message_template.substitute(USERNAME=existing_user.username.title())
+        message = message_template.substitute(PASSWORD=existing_user.password.title())
+        msg['From'] = MY_ADDRESS
+        msg['To'] = email
+        msg['Subject'] = "Forgot password!"
+
+        msg.attach(MIMEText(message, 'plain'))
+
+        s.send_message(msg)
+
+        del msg
         return "valid"
 
     return "invalid"

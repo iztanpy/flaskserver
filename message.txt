@@ -1,0 +1,7 @@
+Hi! 
+
+We received a request that you may have forgotten your username and password!
+Username:${USERNAME}
+Password:${PASSWORD}
+
+Stay Awake Stay Safe!
