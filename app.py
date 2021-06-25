@@ -26,11 +26,11 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # set up connection to the databse
-MY_ADDRESS = 'stayawakeorbital@outlook.com'
-MY_PASSWORD = "StayAwake123"
-s = smtplib.SMTP(host='stayawakeorbital@outlook.com', port=587)
-s.starttls()
-s.login(MY_ADDRESS, MY_PASSWORD)
+# MY_ADDRESS = 'stayawakeorbital@outlook.com'
+# MY_PASSWORD = "StayAwake123"
+# s = smtplib.SMTP(host='stayawakeorbital@outlook.com', port=587)
+# s.starttls()
+# s.login(MY_ADDRESS, MY_PASSWORD)
 
 
 
