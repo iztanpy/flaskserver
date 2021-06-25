@@ -299,6 +299,7 @@ def checkEmail():
         return Template(template_file_content)
 
     email = request.json.get("email")
+    print(email)
 
     existing_user = User.query.filter(
         User.email == email
