@@ -290,36 +290,36 @@ def calibration():
     return 'next_loop'
 
 
-@app.route('/checkEmail', methods=['POST'])
-def checkEmail():
-
-    def read_template(filename):
-        with open(filename, 'r', encoding='utf-8') as template_file:
-            template_file_content = template_file.read()
-        return Template(template_file_content)
-
-    email = request.json.get("email")
-    existing_user = User.query.filter(
-                User.email == email
-                ).first()
-
-    if existing_user:
-        message_template = read_template('message.txt')
-        msg = MIMEMultipart()
-        message = message_template.substitute(USERNAME=existing_user.username.title())
-        message = message_template.substitute(PASSWORD=existing_user.password.title())
-        msg['From'] = MY_ADDRESS
-        msg['To'] = email
-        msg['Subject'] = "Forgot password!"
-
-        msg.attach(MIMEText(message, 'plain'))
-
-        s.send_message(msg)
-
-        del msg
-        return "valid"
-
-    return "invalid"
+# @app.route('/checkEmail', methods=['POST'])
+# def checkEmail():
+#
+#     def read_template(filename):
+#         with open(filename, 'r', encoding='utf-8') as template_file:
+#             template_file_content = template_file.read()
+#         return Template(template_file_content)
+#
+#     email = request.json.get("email")
+#     existing_user = User.query.filter(
+#                 User.email == email
+#                 ).first()
+#
+#     if existing_user:
+#         message_template = read_template('message.txt')
+#         msg = MIMEMultipart()
+#         message = message_template.substitute(USERNAME=existing_user.username.title())
+#         message = message_template.substitute(PASSWORD=existing_user.password.title())
+#         msg['From'] = MY_ADDRESS
+#         msg['To'] = email
+#         msg['Subject'] = "Forgot password!"
+#
+#         msg.attach(MIMEText(message, 'plain'))
+#
+#         s.send_message(msg)
+#
+#         del msg
+#         return "valid"
+#
+#     return "invalid"
 
 
 
