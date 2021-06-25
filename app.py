@@ -76,6 +76,7 @@ class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False)
+    email = db.Column(db.String(64), unique=True, nullable=False)
     password = db.Column(db.String(64), nullable=False)
 
     def check_password(self, password):
@@ -94,10 +95,12 @@ def base():
 def process():
     username = request.json.get("username")
     password = request.json.get("password")
+    email = request.json.get("email")
     try:
         new_user = User(
             username=username,
-            password=password
+            password=password,
+            email=email,
         )
         db.session.add(new_user)
         db.session.commit()
@@ -250,6 +253,23 @@ def calibration():
         return str(mean(calibration_collection))
 
     return 'next_loop'
+
+
+@app.route('/checkEmail', methods=['POST'])
+def checkEmail():
+    email = request.json.get("email")
+    existing_user = User.query.filter(
+                User.email == email
+                ).first()
+    if existing_user:
+        #email the username and password!
+        existing_user.username
+        existing_user.password
+
+        return "valid"
+
+    return "invalid"
+
 
 
 if __name__ == "__main__":
