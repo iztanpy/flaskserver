@@ -299,15 +299,15 @@ def checkEmail():
         return Template(template_file_content)
 
     email = request.json.get("email")
+
     existing_user = User.query.filter(
-                User.email == email
-                ).first()
+        User.email == email
+    ).first()
 
     if existing_user:
         message_template = read_template('message.txt')
         msg = MIMEMultipart()
-        message = message_template.substitute(USERNAME=existing_user.username.title())
-        message = message_template.substitute(PASSWORD=existing_user.password.title())
+        message = message_template.substitute(USERNAME= existing_user.username, PASSWORD=existing_user.password)
         msg['From'] = MY_ADDRESS
         msg['To'] = email
         msg['Subject'] = "Forgot password!"
