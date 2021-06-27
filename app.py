@@ -18,8 +18,6 @@ from email.mime.text import MIMEText
 from string import Template
 
 
-
-
 import time
 
 app = Flask(__name__)
@@ -31,7 +29,6 @@ MY_PASSWORD = "StayAwake123"
 s = smtplib.SMTP(host='smtp-mail.outlook.com', port=587)
 s.starttls()
 s.login(MY_ADDRESS, MY_PASSWORD)
-
 
 
 DATABASE_URL = os.environ['DATABASE_URL']
@@ -165,8 +162,7 @@ def login():
 @app.route('/get_value', methods=['GET', 'POST'])
 def get_value():
     name = request.json.get('name')
-    result = db.execute(f"SELECT ear FROM users WHERE username = '{name}'")
-    print(result)
+
     existing_user = User.query.filter(User.username == name).first()
     result = existing_user.ear
     return str(result)
@@ -276,9 +272,6 @@ def calibration():
         value = mean(calibration_collection)
         print(value)
 
-        db.execute(f"UPDATE users SET ear={value} WHERE username = '{name}'")
-
-        db.commit()
         user = User.query.filter(User.username == name).first()
         user.ear = value
 
@@ -308,7 +301,8 @@ def checkEmail():
     if existing_user:
         message_template = read_template('message.txt')
         msg = MIMEMultipart()
-        message = message_template.substitute(USERNAME= existing_user.username, PASSWORD=existing_user.password)
+        message = message_template.substitute(
+            USERNAME=existing_user.username, PASSWORD=existing_user.password)
         msg['From'] = MY_ADDRESS
         msg['To'] = email
         msg['Subject'] = "Forgot password!"
@@ -321,7 +315,6 @@ def checkEmail():
         return "valid"
 
     return "invalid"
-
 
 
 if __name__ == "__main__":
