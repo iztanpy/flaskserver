@@ -208,7 +208,7 @@ def player():
         avg_ear = (left_ear + right_ear) / 2
         ear_collection.append(avg_ear)
 
-    ear_collection = ear_collection[-6:]
+    ear_collection = ear_collection[-3:]
     value = mean(ear_collection)
 
     return str(value)
