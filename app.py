@@ -283,7 +283,7 @@ def calibration(name):
         db.session.commit()
 
         print('updated!')
-        return str(mean(calibration_collection))
+        return str(mean(calibration_collection[name]))
 
     return 'next_loop'
 
