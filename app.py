@@ -23,7 +23,7 @@ import time
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# set up connection to the databse
+# set up connection to the database
 MY_ADDRESS = 'stayawakeorbital@outlook.com'
 MY_PASSWORD = "StayAwake123"
 s = smtplib.SMTP(host='smtp-mail.outlook.com', port=587)
@@ -41,7 +41,7 @@ if uri.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = uri
 db = SQLAlchemy(app)
 
-calibration_collection = []
+calibration_collection = {}
 
 
 # set up the functions used for facial detection
@@ -51,7 +51,7 @@ dlib_facelandmark = dlib.shape_predictor(
     'shape_predictor_68_face_landmarks.dat')
 
 
-ear_collection = []
+ear_collection = {}
 
 threshold = 0.32
 
@@ -169,9 +169,11 @@ def get_value():
 
 
 # Function to simulate to app running and calculating the EAR
-@app.route('/video_player', methods=['POST'])
-def player():
+@app.route('/video_player/<name>', methods=['POST'])
+def player(name):
     global ear_collection
+    if name not in ear_collection.keys():
+        ear_collection[name] = []
     string = request.json.get('picture')
     img = readb64(string['base64'])
     img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
@@ -206,28 +208,31 @@ def player():
 
         right_ear = calculate_ear(right_eye)
         avg_ear = (left_ear + right_ear) / 2
-        ear_collection.append(avg_ear)
+        ear_collection[name].append(avg_ear)
 
-    ear_collection = ear_collection[-3:]
-    value = mean(ear_collection)
+    ear_collection[name] = ear_collection[name][-3:]
+    value = mean(ear_collection[name])
 
     return str(value)
 
 
 # Function to clear the two lists so that past ear values do not affect current session
-@app.route('/clear', methods=['POST'])
-def clear():
+@app.route('/clear/<name>', methods=['POST'])
+def clear(name):
     global calibration_collection, ear_collection
     print('clearing')
-    calibration_collection.clear()
-    ear_collection.clear()
+    if name in calibration_collection.keys():
+        calibration_collection[name].clear()
+    if name in ear_collection.keys():
+        ear_collection[name].clear()
     return 'cleared'
 
 
 # Function to help the user calibrate ear to their liking
-@app.route('/calibration', methods=['POST'])
-def calibration():
-    calibration_collection = []
+@app.route('/calibration/<name>', methods=['POST'])
+def calibration(name):
+    if name not in calibration_collection.keys():
+        calibration_collection[name] = []
     string = request.json.get('picture')
     is_final = request.json.get('final')
     name = request.json.get('name')
@@ -263,13 +268,13 @@ def calibration():
 
         mean_ear = (left_ear + right_ear) / 2
 
-        calibration_collection.append(mean_ear)
+        calibration_collection[name].append(mean_ear)
 
     print(name)
 
     if is_final == 'true':
         print('final one')
-        value = mean(calibration_collection)
+        value = mean(calibration_collection[name])
         print(value)
 
         user = User.query.filter(User.username == name).first()
