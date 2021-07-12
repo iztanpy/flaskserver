@@ -102,7 +102,8 @@ class User(db.Model):
     username = db.Column(db.String(64), unique=True, nullable=False)
     email = db.Column(db.String(64), unique=True, nullable=False)
     password = db.Column(db.String(64), nullable=False)
-    ear = db.Column(db.Float, default=0.32, nullable=False)
+    ear = db.Column(db.Float, default=0.32)
+    nokEmail = db.Column(db.String(64))
 
     def check_password(self, password):
         return self.password == password
@@ -322,6 +323,22 @@ def checkEmail():
 
     return "invalid"
 
+
+
+@app.route('/getInfo', methods=["POST"])
+def login():
+    userInfo = []
+    username = request.json.get("username")
+    existing_user = User.query.filter(
+        User.username == username
+    ).first()
+    # get the nok info as well as the email address
+    userInfo[0] = existing_user.email
+    if existing_user.nokEmail:
+        userInfo[1] = existing_user.nokEmail
+    else:
+        userInfo[1] = "has not been added!"
+    return userInfo[0] + "," + userInfo[1]
 
 
 if __name__ == "__main__":
