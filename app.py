@@ -139,6 +139,9 @@ class NextOfKin(db.Model):
         return '<NextOfKin %r>' % self.relationshipEmail
 
 
+db.create_all()
+
+
 @app.route('/')
 def base():
     return "server is up!"
