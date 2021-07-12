@@ -220,8 +220,8 @@ def add_user():
     try:
         db.session.add(new_nok)
         db.session.commit()
-    except:
-        return 'failure'
+    except Exception as e:
+        return str(e)
 
     message_template = read_template('verification.txt')
     msg = MIMEMultipart()
