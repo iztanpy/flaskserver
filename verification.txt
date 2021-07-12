@@ -1,0 +1,9 @@
+Hello!
+
+You have been nominated as a next of kin for the Stay Awake Stay Safe app. By being a next of kin, you would obtain updates of the user's location whenever he/she falls asleep on the road and you can take measures to keep them safe. The user that nominated you has an email of ${USEREMAIL}. If you think that you do not know this user you may ignore this email. 
+
+Otherwise let them know of the following verification code : ${VERIFICATION_CODE}
+
+Thank you,
+
+Stay Awake Stay Safe team.

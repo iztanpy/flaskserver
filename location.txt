@@ -1,0 +1,5 @@
+Hello!
+
+We noticed that user with the email ${EMAIL} has been falling asleep on the road. Their location is {$LOCATION}. We hope that you can make sure they travel safely.
+
+Stay Awake Stay Safe team

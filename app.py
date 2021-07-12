@@ -16,14 +16,16 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from string import Template
+from geopy.geocoders import Nominatim
+from random import randint
 
 
-import time
+from sqlalchemy.orm import relation
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# set up connection to the database
+# Set up our own email address
 MY_ADDRESS = 'stayawakeorbital@outlook.com'
 MY_PASSWORD = "StayAwake123"
 s = smtplib.SMTP(host='smtp-mail.outlook.com', port=587)
@@ -31,6 +33,7 @@ s.starttls()
 s.login(MY_ADDRESS, MY_PASSWORD)
 
 
+# set up connection to the database
 DATABASE_URL = os.environ['DATABASE_URL']
 SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL?sslmode=require')
 conn = psycopg2.connect(DATABASE_URL, sslmode='require')
@@ -41,7 +44,10 @@ if uri.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = uri
 db = SQLAlchemy(app)
 
+# Dictionary to store the calibration collection for each user
 calibration_collection = {}
+
+# Dictionary to store the number of times fallen asleep
 
 
 # set up the functions used for facial detection
@@ -53,20 +59,28 @@ dlib_facelandmark = dlib.shape_predictor(
 
 ear_collection = {}
 
+geocoder = Nominatim(user_agent='app')
+
 threshold = 0.32
 
 # Function to decode base64 data to an image in numpy array form
 
+# Function to get an address from an input latitude and longitude
 
+
+def get_address(lat, long):
+    return str(geocoder.reverse((lat, long)))
+
+
+# Function to convert a base64 string to an image in array form
 def readb64(base64_string):
     sbuf = io.BytesIO()
     sbuf.write(base64.b64decode(base64_string))
     pimg = Image.open(sbuf)
     return cv2.cvtColor(np.array(pimg), cv2.COLOR_RGB2BGR)
 
+
 # Function to calculate the eye aspect ratio given a list containing points of the eye
-
-
 def calculate_ear(eye):
     a = distance.euclidean(eye[1], eye[5])
     b = distance.euclidean(eye[2], eye[4])
@@ -97,15 +111,32 @@ class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False)
-    email = db.Column(db.String(64), unique=True, nullable=False)
+    email = db.Column(db.String(320), unique=True, nullable=False)
     password = db.Column(db.String(64), nullable=False)
     ear = db.Column(db.Float, default=0.32, nullable=False)
+    addresses = db.relationship('NextOfKin', backref='users')
 
     def check_password(self, password):
         return self.password == password
 
     def __repr__(self):
         return '<User %r>' % self.username
+
+
+# A class to represent the next of kins
+class NextOfKin(db.Model):
+    __tablename__ = "contacts"
+
+    # 320 because that is the limit of a valid email address
+    relationshipEmail = db.Column(
+        db.String(320), default='placeholder', primary_key=True)
+    username = db.Column(db.String(320), db.ForeignKey(
+        'users.username'), nullable=False, primary_key=True)
+    verificationCode = db.Column(db.Integer, default=0, nullable=False)
+    verified = db.Column(db.Boolean, default=False)
+
+    def __repr__(self):
+        return '<NextOfKin %r>' % self.relationshipEmail
 
 
 @app.route('/')
@@ -136,9 +167,8 @@ def process():
 
         return "failure"
 
+
 # Function to facilitate log in
-
-
 @app.route('/login', methods=["POST"])
 def login():
     username = request.json.get("username")
@@ -166,6 +196,85 @@ def get_value():
     existing_user = User.query.filter(User.username == name).first()
     result = existing_user.ear
     return str(result)
+
+
+# Function to send verification email to next of kin
+@app.route('/add_nok', methods=['GET', 'POST'])
+def add_user():
+    def read_template(filename):
+        with open(filename, 'r', encoding='utf-8') as template_file:
+            template_file_content = template_file.read()
+        return Template(template_file_content)
+
+    username = request.json.get('name')
+    relationshipEmail = request.json.get('email')
+    verificationCode = randint(100000, 999999)
+    new_nok = NextOfKin(relationshipEmail=relationshipEmail,
+                        username=username,
+                        verificationCode=verificationCode)
+    # send an email with the verification to the next of kin
+
+    nominating_user = User.query.filter(User.username == username).first()
+    nominating_user_email = nominating_user.email
+
+    try:
+        db.session.add(new_nok)
+        db.session.commit()
+    except:
+        return 'failure'
+
+    message_template = read_template('verification.txt')
+    msg = MIMEMultipart()
+    message = message_template.substitute(USEREMAIL=nominating_user_email,
+                                          VERIFICATION_CODE=verificationCode)
+    msg['From'] = MY_ADDRESS
+    msg['To'] = relationshipEmail
+    msg['Subject'] = "Next of kin nomination"
+
+    msg.attach(MIMEText(message, 'plain'))
+    s.send_message(msg)
+    del msg
+
+    return 'success'
+
+# Function to check whether a nok is verified
+
+
+@app.route('/check_verificaiton', methods=['GET', 'POST'])
+def check_verificaiton():
+    relationshipEmail = request.json.get('email')
+    username = request.json.get('name')
+    existingEntry = NextOfKin.query.filter(
+        NextOfKin.username == username and NextOfKin.relationshipEmail == relationshipEmail).first()
+    if existingEntry.verified:
+        return 'true'
+    return 'false'
+
+
+# Function to verify the Next of Kin email address
+@app.route('/verify_nok', methods=['GET', 'POST'])
+def verify_nok():
+    inputtedCode = int(request.json.get('input'))
+    username = request.json.get('name')
+    relationshipEmail = request.json.get('relationship')
+    existingEntry = NextOfKin.query.filter(
+        NextOfKin.username == username and NextOfKin.relationshipEmail == relationshipEmail).first()
+    if existingEntry.verificationCode == inputtedCode:
+        existingEntry.verified = True
+        return 'Success'
+    return 'failure'
+
+
+# Function to delete a Next of Kin
+@app.route('/delete_nok', methods=['GET', 'POST'])
+def delete_nok():
+    username = request.json.get('name')
+    relationshipEmail = request.json.get('relationship')
+    existingEntry = NextOfKin.query.filter(
+        NextOfKin.username == username and NextOfKin.relationshipEmail == relationshipEmail).first()
+    db.session.delete(existingEntry)
+    db.session.commit()
+    return 'deleted'
 
 
 # Function to simulate to app running and calculating the EAR
