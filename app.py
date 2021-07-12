@@ -243,8 +243,8 @@ def add_user():
 # Function to check whether a nok is verified
 
 
-@app.route('/check_verificaiton', methods=['GET', 'POST'])
-def check_verificaiton():
+@app.route('/check_verification', methods=['GET', 'POST'])
+def check_verification():
     relationshipEmail = request.json.get('email')
     username = request.json.get('name')
     existingEntry = NextOfKin.query.filter(
@@ -274,8 +274,8 @@ def delete_nok():
     username = request.json.get('name')
     relationshipEmail = request.json.get('relationship')
     existingEntry = NextOfKin.query.filter(
-        NextOfKin.username == username and NextOfKin.relationshipEmail == relationshipEmail).first()
-    db.session.delete(existingEntry)
+        NextOfKin.username == username and NextOfKin.relationshipEmail == relationshipEmail).delete()
+
     db.session.commit()
     return 'deleted'
 
