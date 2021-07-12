@@ -326,7 +326,7 @@ def checkEmail():
 
 
 @app.route('/getInfo', methods=["POST"])
-def login():
+def getInfo():
     userInfo = []
     username = request.json.get("username")
     existing_user = User.query.filter(
@@ -339,6 +339,27 @@ def login():
     else:
         userInfo[1] = "has not been added!"
     return userInfo[0] + "," + userInfo[1]
+
+
+@app.route('/updateInfo', methods=["POST"])
+def updateInfo():
+    oldName = request.json.get("name")
+    newUsername = request.json.get("username")
+    newEmail = request.json.get("email")
+    newNokEmail = request.json.get("nokEmail")
+    existing_user = User.query.filter(
+        User.username == oldName
+    ).first()
+    # get the nok info as well as the email address
+    try:
+        existing_user.email = newEmail
+        existing_user.username = newUsername
+        existing_user.nokEmail = newNokEmail
+        return "success"
+    except:
+        return "failure"
+
+
 
 
 if __name__ == "__main__":
