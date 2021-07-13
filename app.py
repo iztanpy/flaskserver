@@ -418,7 +418,7 @@ def checkEmail():
 
 @app.route('/getInfo', methods=["POST"])
 def getInfo():
-    userInfo = []
+    userInfo = ['', '']
     username = request.json.get("username")
     existing_user = User.query.filter(
         User.username == username
