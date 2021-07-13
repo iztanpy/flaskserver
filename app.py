@@ -113,8 +113,10 @@ class User(db.Model):
     username = db.Column(db.String(64), unique=True, nullable=False)
     email = db.Column(db.String(320), unique=True, nullable=False)
     password = db.Column(db.String(64), nullable=False)
-    ear = db.Column(db.Float, default=0.32, nullable=False)
-    addresses = db.relationship('NextOfKin', backref='users')
+    ear = db.Column(db.Float, default=0.32)
+    nokEmail = db.Column(db.String(320))
+    nokCode = db.Column(db.Integer, default=0)
+    nokVerified = db.Column(db.Boolean, default=False)
 
     def check_password(self, password):
         return self.password == password
@@ -124,19 +126,6 @@ class User(db.Model):
 
 
 # A class to represent the next of kins
-class NextOfKin(db.Model):
-    __tablename__ = "contacts"
-
-    # 320 because that is the limit of a valid email address
-    relationshipEmail = db.Column(
-        db.String(320), default='placeholder', primary_key=True)
-    username = db.Column(db.String(320), db.ForeignKey(
-        'users.username'), nullable=False, primary_key=True)
-    verificationCode = db.Column(db.Integer, default=0, nullable=False)
-    verified = db.Column(db.Boolean, default=False)
-
-    def __repr__(self):
-        return '<NextOfKin %r>' % self.relationshipEmail
 
 
 db.create_all()
@@ -203,7 +192,7 @@ def get_value():
 
 # Function to send verification email to next of kin
 @app.route('/add_nok', methods=['GET', 'POST'])
-def add_user():
+def add_nok():
     def read_template(filename):
         with open(filename, 'r', encoding='utf-8') as template_file:
             template_file_content = template_file.read()
@@ -212,19 +201,13 @@ def add_user():
     username = request.json.get('name')
     relationshipEmail = request.json.get('email')
     verificationCode = randint(100000, 999999)
-    new_nok = NextOfKin(relationshipEmail=relationshipEmail,
-                        username=username,
-                        verificationCode=verificationCode)
-    # send an email with the verification to the next of kin
 
     nominating_user = User.query.filter(User.username == username).first()
+    nominating_user.nokEmail = relationshipEmail
+    nominating_user.nokCode = verificationCode
     nominating_user_email = nominating_user.email
 
-    try:
-        db.session.add(new_nok)
-        db.session.commit()
-    except Exception as e:
-        return str(e)
+    db.session.commit()
 
     message_template = read_template('verification.txt')
     msg = MIMEMultipart()
@@ -247,9 +230,9 @@ def add_user():
 def check_verification():
     relationshipEmail = request.json.get('email')
     username = request.json.get('name')
-    existingEntry = NextOfKin.query.filter(
-        NextOfKin.username == username and NextOfKin.relationshipEmail == relationshipEmail).first()
-    if existingEntry.verified:
+    existingEntry = User.query.filter(username == username).first()
+
+    if existingEntry.nokVerified:
         return 'true'
     return 'false'
 
@@ -259,11 +242,11 @@ def check_verification():
 def verify_nok():
     inputtedCode = int(request.json.get('input'))
     username = request.json.get('name')
-    relationshipEmail = request.json.get('relationship')
-    existingEntry = NextOfKin.query.filter(
-        NextOfKin.username == username and NextOfKin.relationshipEmail == relationshipEmail).first()
-    if existingEntry.verificationCode == inputtedCode:
-        existingEntry.verified = True
+
+    existingEntry = User.query.filter(username == username).first()
+    if existingEntry.nokCode == inputtedCode:
+        existingEntry.nokVerified = True
+        db.session.commit()
         return 'Success'
     return 'failure'
 
@@ -272,11 +255,10 @@ def verify_nok():
 @app.route('/delete_nok', methods=['GET', 'POST'])
 def delete_nok():
     username = request.json.get('name')
-    relationshipEmail = request.json.get('relationship')
-    existingEntry = NextOfKin.query.filter(
-        NextOfKin.username == username and NextOfKin.relationshipEmail == relationshipEmail).delete()
-
+    existingEntry = User.query.filter(username == username).first()
+    existingEntry.nokEmail = None
     db.session.commit()
+
     return 'deleted'
 
 
@@ -432,6 +414,41 @@ def checkEmail():
         return "valid"
 
     return "invalid"
+
+
+@app.route('/getInfo', methods=["POST"])
+def getInfo():
+    userInfo = []
+    username = request.json.get("username")
+    existing_user = User.query.filter(
+        User.username == username
+    ).first()
+    # get the nok info as well as the email address
+    userInfo[0] = existing_user.email
+    if existing_user.nokEmail:
+        userInfo[1] = existing_user.nokEmail
+    else:
+        userInfo[1] = "has not been added!"
+    return userInfo[0] + "," + userInfo[1]
+
+
+@app.route('/updateInfo', methods=["POST"])
+def updateInfo():
+    oldName = request.json.get("name")
+    newUsername = request.json.get("username")
+    newEmail = request.json.get("email")
+
+    existing_user = User.query.filter(
+        User.username == oldName
+    ).first()
+    # get the nok info as well as the email address
+    try:
+        existing_user.email = newEmail
+        existing_user.username = newUsername
+        db.session.commit()
+        return "success"
+    except:
+        return "failure"
 
 
 if __name__ == "__main__":
