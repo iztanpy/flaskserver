@@ -32,7 +32,6 @@ s = smtplib.SMTP(host='smtp-mail.outlook.com', port=587)
 s.starttls()
 s.login(MY_ADDRESS, MY_PASSWORD)
 
-
 # set up connection to the database
 DATABASE_URL = os.environ['DATABASE_URL']
 SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL?sslmode=require')
@@ -208,10 +207,6 @@ def add_nok():
     nominating_user_email = nominating_user.email
 
     db.session.commit()
-
-    s = smtplib.SMTP(host='smtp-mail.outlook.com', port=587)
-    s.starttls()
-    s.login(MY_ADDRESS, MY_PASSWORD)
 
     message_template = read_template('verification.txt')
     msg = MIMEMultipart()
