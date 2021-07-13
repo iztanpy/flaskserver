@@ -209,6 +209,10 @@ def add_nok():
 
     db.session.commit()
 
+    s = smtplib.SMTP(host='smtp-mail.outlook.com', port=587)
+    s.starttls()
+    s.login(MY_ADDRESS, MY_PASSWORD)
+
     message_template = read_template('verification.txt')
     msg = MIMEMultipart()
     message = message_template.substitute(USEREMAIL=nominating_user_email,
