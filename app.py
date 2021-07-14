@@ -476,7 +476,7 @@ def getInfo():
 
 
 @app.route('/updateInfoName', methods=["POST"])
-def updateInfo():
+def updateInfoName():
     oldName = request.json.get("name")
     newUsername = request.json.get("username")
 
@@ -494,7 +494,7 @@ def updateInfo():
 
 
 @app.route('/updateInfoEmail', methods=["POST"])
-def updateInfo():
+def updateInfoEmail():
     oldName = request.json.get("name")
 
     newEmail = request.json.get("email")
