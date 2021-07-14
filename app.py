@@ -462,7 +462,7 @@ def checkEmail():
     return "invalid"
 
 
-@app.route('/getInfo', methods=["POST"])
+@app.route('/getInfoPersonal', methods=["POST"])
 def getInfo():
     userInfo = ['', '']
     username = request.json.get("username")
@@ -471,17 +471,32 @@ def getInfo():
     ).first()
     # get the nok info as well as the email address
     userInfo[0] = existing_user.email
-    if existing_user.nokEmail:
-        userInfo[1] = existing_user.nokEmail
-    else:
-        userInfo[1] = "has not been added!"
+    userInfo[1] = existing_user.username
     return userInfo[0] + "," + userInfo[1]
 
 
-@app.route('/updateInfo', methods=["POST"])
+@app.route('/updateInfoName', methods=["POST"])
 def updateInfo():
     oldName = request.json.get("name")
     newUsername = request.json.get("username")
+
+    existing_user = User.query.filter(
+        User.username == oldName
+    ).first()
+    # get the nok info as well as the email address
+    try:
+
+        existing_user.username = newUsername
+        db.session.commit()
+        return "success"
+    except:
+        return "failure"
+
+
+@app.route('/updateInfoEmail', methods=["POST"])
+def updateInfo():
+    oldName = request.json.get("name")
+
     newEmail = request.json.get("email")
 
     existing_user = User.query.filter(
@@ -490,7 +505,7 @@ def updateInfo():
     # get the nok info as well as the email address
     try:
         existing_user.email = newEmail
-        existing_user.username = newUsername
+
         db.session.commit()
         return "success"
     except:
