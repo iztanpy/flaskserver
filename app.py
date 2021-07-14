@@ -18,8 +18,6 @@ from email.mime.text import MIMEText
 from string import Template
 from geopy.geocoders import Nominatim
 from random import randint
-
-
 from sqlalchemy.orm import relation
 
 app = Flask(__name__)
@@ -28,9 +26,11 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Set up our own email address
 MY_ADDRESS = 'stayawakeorbital@outlook.com'
 MY_PASSWORD = "StayAwake123"
+
 s = smtplib.SMTP(host='smtp-mail.outlook.com', port=587)
 s.starttls()
 s.login(MY_ADDRESS, MY_PASSWORD)
+
 
 # set up connection to the database
 DATABASE_URL = os.environ['DATABASE_URL']
@@ -42,6 +42,7 @@ if uri.startswith("postgres://"):
 
 app.config['SQLALCHEMY_DATABASE_URI'] = uri
 db = SQLAlchemy(app)
+
 
 # Dictionary to store the calibration collection for each user
 calibration_collection = {}
@@ -70,8 +71,18 @@ threshold = 0.32
 def get_address(lat, long):
     return str(geocoder.reverse((lat, long)))
 
+# function to reconnect to the smtp server
+
+
+def smtp_connect():
+    s = smtplib.SMTP(host='smtp-mail.outlook.com', port=587)
+    s.starttls()
+    s.login(MY_ADDRESS, MY_PASSWORD)
+    return s
 
 # Function to convert a base64 string to an image in array form
+
+
 def readb64(base64_string):
     sbuf = io.BytesIO()
     sbuf.write(base64.b64decode(base64_string))
@@ -167,6 +178,7 @@ def login():
     existing_user = User.query.filter(
         User.username == username
     ).first()
+
     if existing_user:
         print(existing_user.username)
         # check if the password is accurate
@@ -196,29 +208,47 @@ def add_nok():
         with open(filename, 'r', encoding='utf-8') as template_file:
             template_file_content = template_file.read()
         return Template(template_file_content)
-
+    global s
     username = request.json.get('name')
     relationshipEmail = request.json.get('email')
     verificationCode = randint(100000, 999999)
 
-    nominating_user = User.query.filter(User.username == username).first()
+    try:
+        nominating_user = User.query.filter(User.username == username).first()
+        nominating_user_email = nominating_user.email
+
+        message_template = read_template('verification.txt')
+        msg = MIMEMultipart()
+        message = message_template.substitute(USEREMAIL=nominating_user_email,
+                                              VERIFICATION_CODE=verificationCode)
+        msg['From'] = MY_ADDRESS
+        msg['To'] = relationshipEmail
+        msg['Subject'] = "Next of kin nomination"
+
+        msg.attach(MIMEText(message, 'plain'))
+        s.send_message(msg)
+        del msg
+
+    except smtplib.SMTPServerDisconnected:
+        s = smtp_connect()
+        nominating_user = User.query.filter(User.username == username).first()
+        nominating_user_email = nominating_user.email
+
+        message_template = read_template('verification.txt')
+        msg = MIMEMultipart()
+        message = message_template.substitute(USEREMAIL=nominating_user_email,
+                                              VERIFICATION_CODE=verificationCode)
+        msg['From'] = MY_ADDRESS
+        msg['To'] = relationshipEmail
+        msg['Subject'] = "Next of kin nomination"
+
+        msg.attach(MIMEText(message, 'plain'))
+        s.send_message(msg)
+
     nominating_user.nokEmail = relationshipEmail
     nominating_user.nokCode = verificationCode
     nominating_user_email = nominating_user.email
-
     db.session.commit()
-
-    message_template = read_template('verification.txt')
-    msg = MIMEMultipart()
-    message = message_template.substitute(USEREMAIL=nominating_user_email,
-                                          VERIFICATION_CODE=verificationCode)
-    msg['From'] = MY_ADDRESS
-    msg['To'] = relationshipEmail
-    msg['Subject'] = "Next of kin nomination"
-
-    msg.attach(MIMEText(message, 'plain'))
-    s.send_message(msg)
-    del msg
 
     return 'success'
 
@@ -395,22 +425,39 @@ def checkEmail():
     existing_user = User.query.filter(
         User.email == email
     ).first()
+    global s
 
     if existing_user:
-        message_template = read_template('message.txt')
-        msg = MIMEMultipart()
-        message = message_template.substitute(
-            USERNAME=existing_user.username, PASSWORD=existing_user.password)
-        msg['From'] = MY_ADDRESS
-        msg['To'] = email
-        msg['Subject'] = "Forgot password!"
+        try:
+            message_template = read_template('message.txt')
+            msg = MIMEMultipart()
+            message = message_template.substitute(
+                USERNAME=existing_user.username, PASSWORD=existing_user.password)
+            msg['From'] = MY_ADDRESS
+            msg['To'] = email
+            msg['Subject'] = "Forgot password!"
 
-        msg.attach(MIMEText(message, 'plain'))
+            msg.attach(MIMEText(message, 'plain'))
 
-        s.send_message(msg)
+            s.send_message(msg)
+            del msg
+            return "valid"
 
-        del msg
-        return "valid"
+        except smtplib.SMTPServerDisconnected:
+            s = smtp_connect()
+            message_template = read_template('message.txt')
+            msg = MIMEMultipart()
+            message = message_template.substitute(
+                USERNAME=existing_user.username, PASSWORD=existing_user.password)
+            msg['From'] = MY_ADDRESS
+            msg['To'] = email
+            msg['Subject'] = "Forgot password!"
+
+            msg.attach(MIMEText(message, 'plain'))
+
+            s.send_message(msg)
+            del msg
+            return "valid"
 
     return "invalid"
 
