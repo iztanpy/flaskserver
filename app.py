@@ -269,10 +269,15 @@ def check_verification():
 # Function to verify the Next of Kin email address
 @app.route('/verify_nok', methods=['GET', 'POST'])
 def verify_nok():
-    inputtedCode = int(request.json.get('input'))
+    try:
+        inputtedCode = int(request.json.get('input'))
+    except ValueError:
+        return 'failure'
     username = request.json.get('name')
 
     existingEntry = User.query.filter(username == username).first()
+    print(existingEntry.nokCode)
+    print(type(existingEntry.nokCode))
     if existingEntry.nokCode == inputtedCode:
         existingEntry.nokVerified = True
         db.session.commit()
