@@ -286,6 +286,8 @@ def delete_nok():
     username = request.json.get('name')
     existingEntry = User.query.filter(username == username).first()
     existingEntry.nokEmail = None
+    existingEntry.nokVerified = False
+    existingEntry.nokCode = 0
     db.session.commit()
 
     return 'deleted'
@@ -463,7 +465,7 @@ def checkEmail():
 
 
 @app.route('/getInfoPersonal', methods=["POST"])
-def getInfo():
+def getInfoPersonal():
     userInfo = ['', '']
     username = request.json.get("username")
     existing_user = User.query.filter(
@@ -473,6 +475,24 @@ def getInfo():
     userInfo[0] = existing_user.email
     userInfo[1] = existing_user.username
     return userInfo[0] + "," + userInfo[1]
+
+
+@app.route('/getInfoNok', methods=["POST"])
+def getInfoNok():
+    userInfo = ['', '']
+    username = request.json.get("username")
+    existing_user = User.query.filter(
+        User.username == username
+    ).first()
+    # get the nok info as well as the email address
+    userInfo[0] = existing_user.nokEmail
+    if not userInfo[0]:
+        return 'nothing'
+    userInfo[1] = existing_user.nokVerified
+    if userInfo[1]:
+        return userInfo[0] + "," + "You have already verified the next of kin email"
+
+    return userInfo[0] + "," + "You have not yet verified the next of kin email. Ask them to provide the verification code sent from email address stayawakeorbital@outlook.com"
 
 
 @app.route('/updateInfoName', methods=["POST"])
