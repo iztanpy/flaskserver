@@ -489,7 +489,8 @@ def updateInfoName():
         existing_user.username = newUsername
         db.session.commit()
         return "success"
-    except:
+    except Exception as e:
+        print(e)
         return "failure"
 
 
