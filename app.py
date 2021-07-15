@@ -273,11 +273,15 @@ def verify_nok():
     inputtedCode = 0
     try:
         inputtedCode = int(request.json.get('input'))
+        print(inputtedCode)
     except ValueError:
         return 'failure'
+
     username = request.json.get('name')
+    print(username)
 
     existingEntry = User.query.filter(username == username).first()
+    print(existingEntry)
     print(existingEntry.nokCode)
     print(type(existingEntry.nokCode))
     if existingEntry.nokCode == inputtedCode:
