@@ -247,6 +247,7 @@ def add_nok():
 
     nominating_user.nokEmail = relationshipEmail
     nominating_user.nokCode = verificationCode
+    nominating_user.nokVerified = False
     nominating_user_email = nominating_user.email
     print(nominating_user.nokCode)
     db.session.commit()
@@ -286,10 +287,11 @@ def verify_nok():
     print(existingEntry.nokCode)
     print(type(existingEntry.nokCode))
     if int(existingEntry.nokCode) == inputtedCode:
+
         existingEntry.nokVerified = True
         db.session.commit()
         return 'Success'
-    return 'failure'
+    return 'Failure'
 
 
 # Function to delete a Next of Kin
