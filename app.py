@@ -285,7 +285,7 @@ def verify_nok():
     print(existingEntry)
     print(existingEntry.nokCode)
     print(type(existingEntry.nokCode))
-    if existingEntry.nokCode == inputtedCode:
+    if int(existingEntry.nokCode) == inputtedCode:
         existingEntry.nokVerified = True
         db.session.commit()
         return 'Success'
