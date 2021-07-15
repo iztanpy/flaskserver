@@ -110,6 +110,12 @@ def mean(lst):
     return final / len(lst)
 
 
+def read_template(filename):
+    with open(filename, 'r', encoding='utf-8') as template_file:
+        template_file_content = template_file.read()
+    return Template(template_file_content)
+
+
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhost/facialdetection'
 
 # consumer.py for rabbitmq
@@ -204,10 +210,7 @@ def get_value():
 # Function to send verification email to next of kin
 @app.route('/add_nok', methods=['GET', 'POST'])
 def add_nok():
-    def read_template(filename):
-        with open(filename, 'r', encoding='utf-8') as template_file:
-            template_file_content = template_file.read()
-        return Template(template_file_content)
+
     global s
     username = request.json.get('name')
     relationshipEmail = request.json.get('email')
@@ -365,6 +368,64 @@ def clear(name):
     if name in ear_collection.keys():
         ear_collection[name].clear()
     return 'cleared'
+
+
+# Function to send location information to next of kin
+@app.route('/send_location', methods=['GET', 'POST'])
+def send_location():
+    latititude = float(request.json.get('latitude'))
+    longitude = float(request.json.get('longitude'))
+    username = request.json.get('username')
+    location = str(geocoder.reverse((latititude, longitude)))
+
+    nokEmail = User.query.filter(User.username == username).first().nokEmail
+    if not nokEmail:
+        return 'done'
+
+    nokVerified = User.query.filter(
+        User.username == username).first().nokVerified
+    if not nokVerified:
+        return 'done'
+
+    global s
+    try:
+
+        nominating_user = User.query.filter(User.username == username).first()
+        nominating_user_email = nominating_user.email
+
+        message_template = read_template('location.txt')
+        msg = MIMEMultipart()
+        message = message_template.substitute(EMAIL=nominating_user_email,
+                                              LOCATION=location
+                                              )
+        msg['From'] = MY_ADDRESS
+        msg['To'] = nokEmail
+        msg['Subject'] = "User location alert!"
+
+        msg.attach(MIMEText(message, 'plain'))
+        s.send_message(msg)
+        del msg
+        print('sent')
+
+    except smtplib.SMTPServerDisconnected:
+        s = smtp_connect()
+        nominating_user = User.query.filter(User.username == username).first()
+        nominating_user_email = nominating_user.email
+
+        message_template = read_template('location.txt')
+        msg = MIMEMultipart()
+        message = message_template.substitute(EMAIL=nominating_user_email,
+                                              LOCATION=location
+                                              )
+        msg['From'] = MY_ADDRESS
+        msg['To'] = nokEmail
+        msg['Subject'] = "User location alert!"
+
+        msg.attach(MIMEText(message, 'plain'))
+        s.send_message(msg)
+        print('sent')
+
+    return 'sent email'
 
 
 # Function to help the user calibrate ear to their liking
