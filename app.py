@@ -281,7 +281,7 @@ def verify_nok():
     username = request.json.get('name')
     print(username)
 
-    existingEntry = User.query.filter(username == username).first()
+    existingEntry = User.query.filter(User.username == username).first()
     print(existingEntry)
     print(existingEntry.nokCode)
     print(type(existingEntry.nokCode))
