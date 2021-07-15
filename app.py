@@ -248,6 +248,7 @@ def add_nok():
     nominating_user.nokEmail = relationshipEmail
     nominating_user.nokCode = verificationCode
     nominating_user_email = nominating_user.email
+    print(nominating_user.nokCode)
     db.session.commit()
 
     return 'success'
@@ -269,6 +270,7 @@ def check_verification():
 # Function to verify the Next of Kin email address
 @app.route('/verify_nok', methods=['GET', 'POST'])
 def verify_nok():
+    inputtedCode = 0
     try:
         inputtedCode = int(request.json.get('input'))
     except ValueError:
@@ -491,6 +493,7 @@ def getInfoNok():
     ).first()
     # get the nok info as well as the email address
     userInfo[0] = existing_user.nokEmail
+    print(existing_user.nokCode)
     if not userInfo[0]:
         return 'nothing'
     userInfo[1] = existing_user.nokVerified
