@@ -260,7 +260,8 @@ def add_nok():
 def check_verification():
     relationshipEmail = request.json.get('email')
     username = request.json.get('name')
-    existingEntry = User.query.filter(username == username).first()
+    existingEntry = User.query.filter(User.username == username).first()
+    print(existingEntry)
 
     if existingEntry.nokVerified:
         return 'true'
@@ -295,7 +296,7 @@ def verify_nok():
 @app.route('/delete_nok', methods=['GET', 'POST'])
 def delete_nok():
     username = request.json.get('name')
-    existingEntry = User.query.filter(username == username).first()
+    existingEntry = User.query.filter(User.username == username).first()
     existingEntry.nokEmail = None
     existingEntry.nokVerified = False
     existingEntry.nokCode = 0
