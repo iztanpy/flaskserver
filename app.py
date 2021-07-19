@@ -629,10 +629,11 @@ def updateInfoAll():
         if newUsername != "":
             existing_user.username = newUsername
             db.session.commit()
-        return "success"
     except Exception as e:
         print(e)
         return "Namefailure"
+
+    return "success"
 
 
 
