@@ -608,7 +608,7 @@ def updateInfoEmail():
 
 
 @app.route('/updateInfo', methods=["POST"])
-def updateInfoEmail():
+def updateInfoAll():
     oldName = request.json.get("name")
     newEmail = request.json.get("email")
     newUsername = request.json.get("username")
@@ -621,7 +621,8 @@ def updateInfoEmail():
         if newEmail != " ":
             existing_user.email = newEmail
             db.session.commit()
-    except:
+    except Exception as e:
+        print(e)
         return "Emailfailure"
 
     try:
@@ -629,7 +630,8 @@ def updateInfoEmail():
             existing_user.email = newEmail
             db.session.commit()
         return "success"
-    except:
+    except Exception as e:
+        print(e)
         return "Namefailure"
 
 
