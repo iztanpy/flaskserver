@@ -618,7 +618,7 @@ def updateInfoAll():
     ).first()
     # get the nok info as well as the email address
     try:
-        if newEmail[-3:] != "com":
+        if newEmail[-3:] == "com":
             existing_user.email = newEmail
             db.session.commit()
     except Exception as e:
