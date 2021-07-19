@@ -627,7 +627,7 @@ def updateInfoAll():
 
     try:
         if newUsername != "":
-            existing_user.email = newEmail
+            existing_user.username = newUsername
             db.session.commit()
         return "success"
     except Exception as e:
