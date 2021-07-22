@@ -61,7 +61,7 @@ ear_collection = {}
 
 geocoder = Nominatim(user_agent='app')
 
-threshold = 0.32
+threshold = 0.28
 
 # Function to decode base64 data to an image in numpy array form
 
@@ -129,7 +129,7 @@ class User(db.Model):
     username = db.Column(db.String(64), unique=True, nullable=False)
     email = db.Column(db.String(320), unique=True, nullable=False)
     password = db.Column(db.String(64), nullable=False)
-    ear = db.Column(db.Float, default=0.32)
+    ear = db.Column(db.Float, default=0.28)
     nokEmail = db.Column(db.String(320))
     nokCode = db.Column(db.Integer, default=0)
     nokVerified = db.Column(db.Boolean, default=False)
@@ -164,7 +164,7 @@ def process():
             username=username,
             password=password,
             email=email,
-            ear=0.32,
+            ear=0.28,
         )
         db.session.add(new_user)
         db.session.commit()
