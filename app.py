@@ -581,7 +581,6 @@ def updateInfoName():
     ).first()
     # get the nok info as well as the email address
     try:
-
         existing_user.username = newUsername
         db.session.commit()
         return "success"
@@ -593,7 +592,6 @@ def updateInfoName():
 @app.route('/updateInfoEmail', methods=["POST"])
 def updateInfoEmail():
     oldName = request.json.get("name")
-
     newEmail = request.json.get("email")
 
     existing_user = User.query.filter(
@@ -607,6 +605,38 @@ def updateInfoEmail():
         return "success"
     except:
         return "failure"
+
+
+@app.route('/updateInfo', methods=["POST"])
+def updateInfoAll():
+    oldName = request.json.get("name")
+    newEmail = request.json.get("email")
+    newUsername = request.json.get("username")
+
+    existing_user = User.query.filter(
+        User.username == oldName
+    ).first()
+    # get the nok info as well as the email address
+    try:
+        if newEmail[-3:] == "com":
+            existing_user.email = newEmail
+            db.session.commit()
+    except Exception as e:
+        print(e)
+        return "Emailfailure"
+
+    try:
+        if newUsername != "":
+            existing_user.username = newUsername
+            db.session.commit()
+    except Exception as e:
+        print(e)
+        return "Namefailure"
+
+    return "success"
+
+
+
 
 
 if __name__ == "__main__":
