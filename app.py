@@ -318,14 +318,18 @@ def player(name):
         ear_collection[name] = []
     string = request.json.get('picture')
     img = readb64(string['base64'])
-    img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
-
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
     faces = hog_face_detector(gray)
-    avg_ear = 0
     if not faces:
-        return 'no'
+        for i in range(4):
+            img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+            faces = hog_face_detector(gray)
+            if faces:
+                break
+            if not faces and i == 3:
+                return 'no'
+
+    avg_ear = 0
 
     for face in faces:
 
@@ -438,13 +442,16 @@ def calibration(name):
     name = request.json.get('name')
     img = readb64(string['base64'])
 
-    img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
     faces = hog_face_detector(gray)
-
     if not faces:
-        return 'done'
+        for i in range(4):
+            img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+            faces = hog_face_detector(gray)
+            if faces:
+                break
+            if not faces and i == 3:
+                return 'done'
 
     for face in faces:
         face_landmarks = dlib_facelandmark(gray, face)
@@ -634,9 +641,6 @@ def updateInfoAll():
         return "Namefailure"
 
     return "success"
-
-
-
 
 
 if __name__ == "__main__":

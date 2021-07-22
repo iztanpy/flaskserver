@@ -1,5 +1,5 @@
 Hello!
 
-We noticed that user with the email ${EMAIL} has been falling asleep on the road. Their location is {$LOCATION}. We hope that you can make sure they travel safely.
+We noticed that user with the email ${EMAIL} has been falling asleep on the road for a substantial amount of time. Their location is {$LOCATION}. We hope that you can make sure they travel safely.
 
 Stay Awake Stay Safe team
