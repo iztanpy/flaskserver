@@ -358,7 +358,7 @@ def player(name):
 
     ear_collection[name] = ear_collection[name][-3:]
     value = mean(ear_collection[name])
-    print(time.time())
+    print(value)
     return str(value)
 
 
@@ -475,6 +475,7 @@ def calibration(name):
         calibration_collection[name].append(mean_ear)
 
     print(name)
+    print(mean_ear)
 
     if is_final == 'true':
         print('final one')
