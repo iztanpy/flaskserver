@@ -322,7 +322,7 @@ def player(name):
     faces = hog_face_detector(gray)
     if not faces:
         for i in range(4):
-            img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+            gray = cv2.rotate(gray, cv2.ROTATE_90_CLOCKWISE)
             faces = hog_face_detector(gray)
             if faces:
                 break
@@ -446,7 +446,7 @@ def calibration(name):
     faces = hog_face_detector(gray)
     if not faces:
         for i in range(4):
-            img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+            gray = cv2.rotate(gray, cv2.ROTATE_90_CLOCKWISE)
             faces = hog_face_detector(gray)
             if faces:
                 break
