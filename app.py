@@ -321,9 +321,10 @@ def player(name):
     string = request.json.get('picture')
     img = readb64(string['base64'])
     platform = request.json.get('platform')
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     if platform == 'ios':
-        gray = cv2.rotate(gray, cv2.ROTATE_90_CLOCKWISE)
+        img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
     faces = hog_face_detector(gray)
 
     if not faces:
@@ -442,10 +443,11 @@ def calibration(name):
     platform = request.json.get('platform')
     name = request.json.get('name')
     img = readb64(string['base64'])
+    if platform == 'ios':
+        img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    if platform == 'ios':
-        gray = cv2.rotate(gray, cv2.ROTATE_90_CLOCKWISE)
+
     faces = hog_face_detector(gray)
     if not faces:
         return 'done'
