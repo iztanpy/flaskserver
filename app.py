@@ -19,6 +19,7 @@ from string import Template
 from geopy.geocoders import Nominatim
 from random import randint
 from sqlalchemy.orm import relation
+import time
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -316,18 +317,14 @@ def player(name):
     global ear_collection
     if name not in ear_collection.keys():
         ear_collection[name] = []
+
     string = request.json.get('picture')
     img = readb64(string['base64'])
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     faces = hog_face_detector(gray)
+
     if not faces:
-        for i in range(4):
-            gray = cv2.rotate(gray, cv2.ROTATE_90_CLOCKWISE)
-            faces = hog_face_detector(gray)
-            if faces:
-                break
-            if not faces and i == 3:
-                return 'no'
+        return 'no'
 
     avg_ear = 0
 
@@ -358,7 +355,7 @@ def player(name):
 
     ear_collection[name] = ear_collection[name][-3:]
     value = mean(ear_collection[name])
-
+    print(time.time())
     return str(value)
 
 
@@ -445,13 +442,7 @@ def calibration(name):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     faces = hog_face_detector(gray)
     if not faces:
-        for i in range(4):
-            gray = cv2.rotate(gray, cv2.ROTATE_90_CLOCKWISE)
-            faces = hog_face_detector(gray)
-            if faces:
-                break
-            if not faces and i == 3:
-                return 'done'
+        return 'done'
 
     for face in faces:
         face_landmarks = dlib_facelandmark(gray, face)
