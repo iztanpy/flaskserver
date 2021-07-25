@@ -488,9 +488,9 @@ def calibration(name):
         user.ear = value
 
         db.session.commit()
-
+        calibrated_val = str(mean(calibration_collection[name]))
         print('updated!')
-        return str(mean(calibration_collection[name]))
+        return calibrated_val
 
     return 'next_loop'
 
