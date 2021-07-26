@@ -236,20 +236,26 @@ def add_nok():
 
     except smtplib.SMTPServerDisconnected:
         s = smtp_connect()
-        nominating_user = User.query.filter(User.username == username).first()
-        nominating_user_email = nominating_user.email
+        try:
+            nominating_user = User.query.filter(
+                User.username == username).first()
+            nominating_user_email = nominating_user.email
 
-        message_template = read_template('verification.txt')
-        msg = MIMEMultipart()
-        message = message_template.substitute(USEREMAIL=nominating_user_email,
-                                              VERIFICATION_CODE=verificationCode)
-        msg['From'] = MY_ADDRESS
-        msg['To'] = relationshipEmail
-        msg['Subject'] = "Next of kin nomination"
+            message_template = read_template('verification.txt')
+            msg = MIMEMultipart()
+            message = message_template.substitute(USEREMAIL=nominating_user_email,
+                                                  VERIFICATION_CODE=verificationCode)
+            msg['From'] = MY_ADDRESS
+            msg['To'] = relationshipEmail
+            msg['Subject'] = "Next of kin nomination"
 
-        msg.attach(MIMEText(message, 'plain'))
-        s.send_message(msg)
+            msg.attach(MIMEText(message, 'plain'))
+            s.send_message(msg)
+        except smtplib.SMTPRecipientsRefused:
+            print('hi')
+            return 'failure'
     except smtplib.SMTPRecipientsRefused:
+        print('wassup')
         return 'failure'
 
     nominating_user.nokEmail = relationshipEmail
