@@ -252,10 +252,10 @@ def add_nok():
             msg.attach(MIMEText(message, 'plain'))
             s.send_message(msg)
         except smtplib.SMTPRecipientsRefused:
-            print('hi')
+
             return 'failure'
     except smtplib.SMTPRecipientsRefused:
-        print('wassup')
+
         return 'failure'
 
     nominating_user.nokEmail = relationshipEmail
@@ -366,7 +366,7 @@ def player(name):
         avg_ear = (left_ear + right_ear) / 2
         ear_collection[name].append(avg_ear)
 
-    ear_collection[name] = ear_collection[name][-2:]
+    ear_collection[name] = ear_collection[name][-3:]
     value = mean(ear_collection[name])
     print(value)
     return str(value)
