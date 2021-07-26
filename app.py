@@ -161,6 +161,7 @@ def process():
     password = request.json.get("password")
     email = request.json.get("email")
     try:
+
         new_user = User(
             username=username,
             password=password,
@@ -248,6 +249,8 @@ def add_nok():
 
         msg.attach(MIMEText(message, 'plain'))
         s.send_message(msg)
+    except smtplib.SMTPRecipientsRefused:
+        return 'failure'
 
     nominating_user.nokEmail = relationshipEmail
     nominating_user.nokCode = verificationCode
